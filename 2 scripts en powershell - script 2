@@ -1,0 +1,6 @@
+#!/bin/bash
+mtcars %>%
+  select(cyl,hp,drat %>%
+  filter(cyl != 6) %>%
+  rename(cilindros=cyl)%>%
+  summary()
