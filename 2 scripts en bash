@@ -1,0 +1,10 @@
+#!/bin/bash
+clear
+echo "Escriba sus edad"
+read edad
+if [$edad -ge 18]
+    then
+echo "Bienvenido a el bar"
+else
+echo "usted no dispone de la edad suficiente para ingresar a el bar de moe"
+    fi
