@@ -1,0 +1,15 @@
+import nmap
+begin=78
+end 80
+
+target='148.234.5.206'
+
+#Ip de la universidad
+
+scanner=nmap.PortScanner ()
+foriin range (begin, end+1):
+
+      res=scanner.scan (target, str(i))
+
+      res ['scan'] [target] ['tcp'][i] ['state'] res
+      print (f'port {i} is {res}.')
