@@ -1,0 +1,206 @@
+# -*- coding: utf-8 -*-
+"""
+"""
+import os
+import requests
+from bs4 import BeautifulSoup
+from openpyxl import Workbook
+from openpyxl import load_workbook
+import re
+
+def LINK():  
+    #en esta parte conecto con el archivo links quitando los \n y los guardo en
+    #un arreglo llamado links
+    links = open("links.txt", 'r').readlines()
+    links =list(map(str.strip, links))
+    #print(links)
+    return links
+#LINK()
+    
+def Clima_5():
+    
+    URL = LINK()[0]
+    pagina =requests.get(URL)
+    soup =BeautifulSoup(pagina.content,'html.parser')
+    #para crear el excel de los climas de los ultimos 5 años
+    fo=open("Clima_5.xlsx",'w')
+    wb = Workbook()
+    ws=wb.active
+    #busco las etiquetas en las que pertenecen estos datos
+    titulo=soup.find_all("abbr", class_="tooltip")
+    año = soup.find_all("td", class_="tc1")
+    datos=soup.find_all("td", class_="")
+    #print(datos[293].getText())
+    #print(año[26].getText())
+    #print(titulo)
+    
+    #este alfabeto lo creo para recorrer las celdas en horizontal
+    letras="BCDEFGHIJKL"
+    
+    ws['A2']="AÑO"
+    for n in range(26,31):
+        ws['A'+str(n-23)]=año[n].getText()
+    #para recorrer las celdas en horizontal y guardar titulos
+    x=0
+    for celda in letras:
+        ws[str(celda)+str(2)]=titulo[x].getText()
+        x+=1
+    #para guardar los datos en horizontal del año 2016
+    y=293
+    for CELDA in letras:
+        ws[str(CELDA)+str(3)]=datos[y].getText()
+        y+=1
+        if y==304:
+            break
+    wb.save("Clima_5.xlsx")
+    
+    #para guardar los datos en horizontal del año 2017
+    y=304
+    for CELDA in letras:
+        ws[str(CELDA)+str(4)]=datos[y].getText()
+        y+=1
+        if y==315:
+            break
+    wb.save("Clima_5.xlsx")
+     #para guardar los datos en horizontal del año 2018
+    y=315
+    for CELDA in letras:
+        ws[str(CELDA)+str(5)]=datos[y].getText()
+        y+=1
+        if y==326:
+            break
+    wb.save("Clima_5.xlsx")
+     #para guardar los datos en horizontal del año 2019
+    y=326
+    for CELDA in letras:
+        ws[str(CELDA)+str(6)]=datos[y].getText()
+        y+=1
+        if y==337:
+            break
+    wb.save("Clima_5.xlsx")
+     #para guardar los datos en horizontal del año 2020
+    y=337
+    for CELDA in letras:
+        ws[str(CELDA)+str(7)]=datos[y].getText()
+        y+=1
+        if y==348:
+            break
+    wb.save("Clima_5.xlsx")
+    fo.close()
+    
+#Clima_5()
+    
+def Downloads_image():
+    direccion = "https://www.mundodeportivo.com/uncomo/educacion/articulo/que-son-los-fenomenos-meteorologicos-y-ejemplos-51530.html"
+    page =requests.get(direccion)
+    sopa =BeautifulSoup(page.content,'html.parser')
+    #para despues hacer la busqueda de las imagenes
+    img=sopa.find_all("img")
+    #para guardar las imagenes jpg en una lista
+    #esto cumple la parte de estructura de datos
+    Lista_img= []
+    #este filtro lo uso solo para las imagenes jpg (primera expresion regular)
+    filtro = re.compile(r'(.jpg)')
+    for imagenes in img:
+        if imagenes is not None:
+            #imagenes.get('src')
+            formato=filtro.search(imagenes.get('src'))
+            if formato is not None:  
+                #print(imagenes.get('src'))
+                Lista_img.append(imagenes.get('src'))
+     #para nombrar i guardar las imagenes           
+    x=0
+    for n in range(len(Lista_img)):
+        x+=1
+        with open("img-clima-" + str(x)+ '.jpg','wb')as f:
+            res = requests.get(Lista_img[n+1])
+            f.write(res.content)
+            f.close()
+            if x == 4:
+                break
+#Downloads_image()
+
+def carpeta():
+    #para saber el directorio en el que me encuentro
+    ruta=os.getcwd()
+    #comprueba si en el directorio existe la carpeta images
+    if os.path.isdir(ruta +"\images"):
+        #se cambia al directo y guarda las imagenes
+        os.chdir(ruta+"\images")
+        Downloads_image()
+        #me regreso al directorio anterior para que no haa problema con las demas funciones
+        os.chdir("../")
+    else:
+        os.mkdir("images")
+        ruta = ruta+"\images"
+        os.chdir(ruta)
+        Downloads_image()
+        os.chdir("../")
+#carpeta()
+
+def APIClima():
+    
+    i= "Mexico"
+    link_api="https://api.openweathermap.org/data/2.5/forecast?q={}&appid=9862e2fe63ba6e93fbd829302d28f502&units=metric".format(i)
+    #hago el request de la pagina del clima
+    REQ =requests.get(link_api)
+    #se pasa a formato en JSON
+    DATOS =REQ.json()
+    #convierto a texto lo que devuelve el API
+    TEXTO=(str(DATOS))
+    #hago una expresion regular para encontrar la temperatura
+    buscar= re.findall(r'temp.......',TEXTO)
+    #hago otra expresion para encontrar el lugar del api
+    lugar= re.findall(r'Mexico',TEXTO)
+    #guardo todo lo que encuentra en un arreglo NOTA:AGREGA TODO HASTA LO QUE NO OCUPO
+    TEMPERATURA=[]
+    #Agrego este arreglo ara solo las temperaturas que me importan
+    temp=[]
+    #for para guardar esas temperaturas
+    for tempDia in buscar:
+        TEMPERATURA.append(tempDia)
+    for x in range(0,len(TEMPERATURA),4):
+        temp.append(TEMPERATURA[x])
+        if x==12:
+            break
+        
+    ruta=os.getcwd()+"\Clima_5.xlsx"
+    wb =load_workbook(ruta)
+    NOTA=wb['Sheet']['I9']
+    NOTA1=wb['Sheet']['J9']
+    NOTA2=wb['Sheet']['J10']
+    NOTA3=wb['Sheet']['J11']
+    NOTA4=wb['Sheet']['J12']
+    NOTA5=wb['Sheet']['J13']
+    NOTA.value =lugar[0]
+    NOTA1.value="Temperatura"
+    NOTA2.value=temp[0]
+    NOTA3.value=temp[1]
+    NOTA4.value=temp[2]
+    NOTA5.value=temp[3]
+    wb.save(ruta)
+#APIClima()
+    
+def TituloNoticia():
+    DIR = LINK()[3]
+    sitio =requests.get(DIR)
+    sopa2 =BeautifulSoup(sitio.content,'html.parser')
+    noticia=sopa2.find_all("a")
+    
+    #print (noticia[24].getText("href"))  
+    #print (noticia[27].getText("href"))
+    #print (noticia[30].getText("href"))
+    
+    #Abre el archivo de excel existente y guarda las noticias
+    ruta=os.getcwd()+"\Clima_5.xlsx"
+    wb =load_workbook(ruta)
+    NOTA=wb['Sheet']['A9']
+    NOTA1=wb['Sheet']['A10']
+    NOTA2=wb['Sheet']['A11']
+    NOTA3=wb['Sheet']['A12']
+    NOTA.value ="Titulos Noticias"
+    NOTA1.value=noticia[24].getText("href")
+    NOTA2.value=noticia[27].getText("href")
+    NOTA3.value=noticia[30].getText("href")
+    wb.save(ruta)
+#TituloNoticia()
